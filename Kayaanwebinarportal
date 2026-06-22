@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayaan Integrated Systems | The AI Boom</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        midnight: '#0A1931',
+                        platinum: '#F8FAFC',
+                        crimson: '#E11D48',
+                        surface: '#112240',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Base OS Styles */
+        body { 
+            background-color: #0A1931; 
+            color: #F8FAFC; 
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(17, 34, 64, 0.7); backdrop-filter: blur(12px);
+            border: 1px solid rgba(248, 250, 252, 0.05);
+        }
+        
+        .glass-card {
+            background: rgba(17, 34, 64, 0.6); backdrop-filter: blur(12px);
+            border: 1px solid rgba(248, 250, 252, 0.05); transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(225, 29, 72, 0.5); transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(225, 29, 72, 0.1);
+        }
+        .locked-icon { text-shadow: 0 0 10px rgba(225, 29, 72, 0.5); }
+        
+        /* View Management */
+        .view-section { display: none; opacity: 0; transition: opacity 0.4s ease; min-height: 100vh; flex-direction: column; }
+        .view-section.active { display: flex; opacity: 1; }
+
+        /* Auth Modal */
+        #auth-modal { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        #auth-modal.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.95); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #auth-modal.active .modal-content { transform: scale(1); }
+        
+        .cyber-input {
+            background: rgba(10, 25, 49, 0.8); border: 1px solid #334155;
+            color: white; letter-spacing: 0.2em; text-align: center;
+            font-size: 1.5rem; text-transform: uppercase;
+        }
+        .cyber-input:focus { outline: none; border-color: #E11D48; box-shadow: 0 0 15px rgba(225, 29, 72, 0.2); }
+
+        /* Presentation Specific Styles */
+        #presentation-wrapper { align-items: center; justify-content: center; padding: 40px 20px; box-sizing: border-box; background: #0B132B; }
+        
+        .stage {
+            position: relative; width: 1000px; height: 562.5px;
+            background: #ffffff; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            border-radius: 8px; overflow: hidden; transform-origin: center center;
+        }
+        
+        .deck { display: none; width: 100%; height: 100%; } 
+        
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+            background-color: #ffffff; display: flex; flex-direction: column; box-sizing: border-box;
+            color: #334155; 
+        }
+        .slide.active { opacity: 1; pointer-events: auto; }
+        
+        /* Typography & Layout Overrides for Slides */
+        .flex-center { display: flex; justify-content: center; align-items: center; text-align: center; flex-direction: column; height: 100%; padding: 40px; }
+        .flex-split { display: flex; height: 100%; }
+        .col-left { flex: 1; padding: 60px; display: flex; flex-direction: column; justify-content: center; text-align: left; }
+        .col-right { flex: 1; background: #F8FAFC; padding: 60px; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid #E2E8F0; text-align: left; }
+        
+        .stage .tag { color: #E11D48; font-size: 14px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; text-align: left; }
+        .flex-center .tag { text-align: center; }
+        .stage .title-xl { color: #0A1931; font-size: 72px; font-weight: 900; line-height: 1.1; letter-spacing: -2px; margin: 0 0 20px 0; }
+        .stage .title-lg { color: #0A1931; font-size: 54px; font-weight: 800; line-height: 1.2; letter-spacing: -1px; margin: 0 0 20px 0; }
+        .stage .title-md { color: #0A1931; font-size: 42px; font-weight: 800; line-height: 1.2; margin: 0 0 20px 0; }
+        .stage .text-lg { color: #334155; font-size: 28px; font-weight: 400; line-height: 1.4; margin: 0;}
+        .stage .text-md { color: #64748B; font-size: 20px; font-weight: 400; line-height: 1.5; margin: 0;}
+        
+        .stage .highlight { color: #E11D48; }
+        .stage .accent-box { border-left: 6px solid #E11D48; padding-left: 20px; margin: 20px 0; text-align: left;}
+        
+        .stage .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%; margin-top: 40px; }
+        .stage .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: 100%; margin-top: 30px; }
+        
+        .stage .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left; }
+        .stage .card.dark { background: #0A1931; color: white; border: none; }
+        .stage .card.dark * { color: white; }
+
+        .stage ul.clean-list { list-style: none; padding: 0; margin: 0; text-align: left; }
+        .stage ul.clean-list li { font-size: 24px; color: #334155; margin-bottom: 15px; display: flex; align-items: center; font-weight: 600;}
+        .stage ul.clean-list li span.icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 14px; margin-right: 15px; flex-shrink: 0;}
+        .stage .icon-red { background: #E11D48; }
+        .stage .icon-green { background: #10B981; }
+
+        .process-step { display: flex; align-items: flex-start; margin-bottom: 30px; text-align: left; }
+        .process-number { font-size: 48px; font-weight: 900; color: #E11D48; line-height: 1; margin-right: 20px; opacity: 0.3; }
+        .process-content h3 { font-size: 24px; color: #0A1931; margin: 0 0 5px 0; font-weight: 800; }
+        .process-content p { font-size: 16px; color: #64748B; margin: 0; line-height: 1.5; }
+
+        .stack-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed #CBD5E1; }
+        .stack-item { font-size: 22px; font-weight: 600; color: #0A1931; }
+        .stack-value { font-size: 22px; font-weight: 800; color: #E11D48; }
+        .stack-total { font-size: 32px; font-weight: 900; color: #0A1931; padding-top: 20px; }
+
+        /* Interactive Controls */
+        .controls-overlay {
+            position: absolute; bottom: 20px; right: 20px; z-index: 100;
+            display: flex; gap: 15px; align-items: center;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px);
+            padding: 8px 16px; border-radius: 30px; border: 1px solid #E2E8F0;
+        }
+        .stage .btn { background: transparent; border: none; font-size: 20px; color: #0A1931; cursor: pointer; transition: 0.2s; padding: 0 5px; }
+        .stage .btn:hover { color: #E11D48; transform: scale(1.1); }
+        .stage .counter { font-weight: 800; color: #64748B; font-size: 14px; min-width: 50px; text-align: center; }
+        
+        .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: #F1F5F9; z-index: 100; }
+        .progress-bar { height: 100%; background: #E11D48; width: 0%; transition: width 0.3s ease; }
+
+        .notes-panel {
+            position: absolute; bottom: -100%; left: 0; width: 100%; height: auto; max-height: 50%;
+            background: rgba(10, 25, 49, 0.98); backdrop-filter: blur(10px);
+            border-top: 4px solid #E11D48; padding: 30px 40px; box-sizing: border-box;
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            color: #F8FAFC; font-size: 18px; font-weight: 400; line-height: 1.6; z-index: 90; text-align: left;
+        }
+        .notes-panel.show { bottom: 0; }
+        .notes-label { color: #E11D48; font-weight: 800; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; display: block; }
+
+        @media (max-width: 1100px) { .stage { transform: scale(0.8); } }
+        @media (max-width: 850px) { .stage { transform: scale(0.55); } }
+    </style>
+</head>
+<body class="selection:bg-crimson selection:text-white">
+
+    <nav class="fixed w-full z-50 glass-panel border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('landing')">
+                    <span class="text-4xl font-serif text-platinum font-bold tracking-tighter">K</span>
+                    <div class="flex flex-col hidden sm:flex">
+                        <span class="text-xs tracking-[0.3em] font-semibold text-gray-400">KAYAAN</span>
+                        <span class="text-[0.6rem] tracking-[0.2em] text-gray-500 uppercase">Integrated Systems</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="https://tally.so/forms/yP7ge6/" target="_blank" class="hidden sm:block text-gray-400 hover:text-white text-sm font-bold tracking-widest uppercase transition-colors">
+                        Apply
+                    </a>
+                    <button onclick="switchView('portal')" class="bg-crimson hover:bg-red-700 text-white px-4 sm:px-6 py-2 rounded shadow-[0_0_15px_rgba(229,9,20,0.4)] transition-all font-bold text-xs sm:text-sm uppercase tracking-wider">
+                        <i class="fa-solid fa-key mr-2"></i> Command Portal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="landing-view" class="view-section active pt-28 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow flex flex-col justify-center">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-12">
+                <div class="space-y-8">
+                    <div class="inline-block border border-crimson/50 bg-crimson/10 px-4 py-1 rounded text-crimson font-bold text-xs tracking-widest uppercase">
+                        Official Intelligence Briefing
+                    </div>
+                    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black leading-tight tracking-tight">
+                        MOST PEOPLE WILL <span class="text-transparent bg-clip-text bg-gradient-to-r from-gray-400 to-platinum">NEVER BENEFIT</span> FROM THE AI BOOM.
+                    </h1>
+                    <p class="text-xl text-gray-400 font-light border-l-4 border-crimson pl-4">
+                        Not because they are too late. Because they don't know where the opportunities are being created. Stop playing by the old rules.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <div class="glass-card p-4 rounded flex items-center gap-4">
+                            <i class="fa-regular fa-calendar text-crimson text-2xl"></i>
+                            <div>
+                                <div class="text-xs text-gray-400 uppercase tracking-wider">Starts</div>
+                                <div class="font-bold text-lg">JUNE 24</div>
+                            </div>
+                        </div>
+                        <div class="glass-card p-4 rounded flex items-center gap-4">
+                            <i class="fa-regular fa-clock text-crimson text-2xl"></i>
+                            <div>
+                                <div class="text-xs text-gray-400 uppercase tracking-wider">Time</div>
+                                <div class="font-bold text-lg">5:00 PM WAT</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-8 rounded-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-crimson to-transparent"></div>
+                    <h3 class="text-2xl font-bold mb-2">Secure Your Access</h3>
+                    <p class="text-gray-400 text-sm mb-6">This is a 3-Day Live Webinar. Slots are strictly capped for quality control. Serious applicants only.</p>
+                    
+                    <div class="space-y-4">
+                        <a href="https://tally.so/forms/yP7ge6/" target="_blank" class="w-full bg-crimson hover:bg-red-700 text-white font-bold py-5 rounded shadow-[0_0_20px_rgba(229,9,20,0.3)] transition-all flex justify-center items-center gap-3 mt-4 text-lg tracking-widest uppercase">
+                            <i class="fa-solid fa-file-signature"></i> COMPLETE APPLICATION
+                        </a>
+                        <p class="text-center text-xs text-gray-500 mt-4">Already registered? <button onclick="switchView('portal')" class="text-white hover:text-crimson underline">Enter the portal here.</button></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="py-20 border-t border-gray-800 mt-12">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold mb-4">THE 3-DAY INTELLIGENCE BRIEFING</h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto">We are not here to teach basic AI prompts. We are here to draft elite operators for the next phase of the digital economy.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="glass-card p-8 rounded-lg border-t-2 border-t-gray-600 hover:border-t-crimson transition-colors">
+                        <div class="text-crimson font-black text-4xl mb-4">01</div>
+                        <h3 class="text-xl font-bold mb-3">The Paradigm Shift</h3>
+                        <p class="text-gray-400 text-sm">Discover exactly how the AI wealth transfer works. We will break down the difference between consumers and builders, and map where the money is actually flowing.</p>
+                    </div>
+                    <div class="glass-card p-8 rounded-lg border-t-2 border-t-gray-600 hover:border-t-crimson transition-colors">
+                        <div class="text-crimson font-black text-4xl mb-4">02</div>
+                        <h3 class="text-xl font-bold mb-3">The Mechanics</h3>
+                        <p class="text-gray-400 text-sm">A high-level view of the Kayaan Systems infrastructure. See how we use AI to build digital products and automated monetization funnels for elite creator audiences.</p>
+                    </div>
+                    <div class="glass-card p-8 rounded-lg border-t-2 border-t-crimson shadow-[0_-5px_20px_rgba(229,9,20,0.1)] relative">
+                        <div class="absolute -top-3 right-4 bg-crimson text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">The Draft</div>
+                        <div class="text-crimson font-black text-4xl mb-4">03</div>
+                        <h3 class="text-xl font-bold mb-3">The Operator Draft</h3>
+                        <p class="text-gray-400 text-sm">The final day. We will open the doors to the exclusive 6-week Kayaan Certification Cohort. The top 1% will be drafted to work directly with Kayaan Integrated Systems.</p>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="border-t border-gray-800 py-8 mt-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl font-serif text-platinum font-bold">K</span>
+                        <span class="text-xs tracking-[0.2em] text-gray-500 uppercase font-semibold">Kayaan Integrated Systems</span>
+                    </div>
+                    <div class="text-xs text-gray-500">&copy; 2026 Kayaan Integrated Systems. All rights reserved.</div>
+                </div>
+            </footer>
+        </div>
+    </main>
+
+    <main id="portal-view" class="view-section pt-32 pb-12 bg-[radial-gradient(circle_at_50%_0%,#112240_0%,#0A1931_70%)]">
+        <div class="max-w-5xl mx-auto w-full px-4 z-10 flex-grow flex flex-col justify-center">
+            
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white text-midnight text-3xl font-black rounded mb-6 shadow-[0_0_20px_rgba(255,255,255,0.1)]">K</div>
+                <h1 class="text-xs tracking-[0.4em] text-gray-400 font-bold uppercase mb-2">Kayaan Integrated Systems</h1>
+                <h2 class="text-4xl md:text-5xl font-black text-platinum tracking-tight">COMMAND PORTAL</h2>
+                <p class="mt-4 text-gray-400 max-w-xl mx-auto">Select a module below and enter the clearance code provided in the official WhatsApp briefing room.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <button onclick="openAuthModal(1)" class="glass-card rounded-xl p-8 text-left group w-full relative overflow-hidden focus:outline-none">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-crimson rounded-bl-full opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-6">
+                        <span class="text-crimson font-black text-2xl tracking-widest">01</span>
+                        <i class="fa-solid fa-lock text-gray-500 group-hover:text-crimson transition-colors locked-icon text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">The New Economy</h3>
+                    <p class="text-gray-400 text-sm mb-6">The paradigm shift. Why consumers will lose and operators will win.</p>
+                    <div class="text-xs font-bold tracking-widest text-gray-500 uppercase group-hover:text-white transition-colors">
+                        Access Module <i class="fa-solid fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all"></i>
+                    </div>
+                </button>
+
+                <button onclick="openAuthModal(2)" class="glass-card rounded-xl p-8 text-left group w-full relative overflow-hidden focus:outline-none">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-crimson rounded-bl-full opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-6">
+                        <span class="text-crimson font-black text-2xl tracking-widest">02</span>
+                        <i class="fa-solid fa-lock text-gray-500 group-hover:text-crimson transition-colors locked-icon text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">The Mechanics</h3>
+                    <p class="text-gray-400 text-sm mb-6">The exact 5-step infrastructure used to extract capital from creators.</p>
+                    <div class="text-xs font-bold tracking-widest text-gray-500 uppercase group-hover:text-white transition-colors">
+                        Access Module <i class="fa-solid fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all"></i>
+                    </div>
+                </button>
+
+                <button onclick="openAuthModal(3)" class="glass-card rounded-xl p-8 text-left group w-full relative overflow-hidden focus:outline-none">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-crimson rounded-bl-full opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-6">
+                        <span class="text-crimson font-black text-2xl tracking-widest">03</span>
+                        <i class="fa-solid fa-lock text-gray-500 group-hover:text-crimson transition-colors locked-icon text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">The Operator Draft</h3>
+                    <p class="text-gray-400 text-sm mb-6">The final piece. Secure your blueprint and join the Kayaan ranks.</p>
+                    <div class="text-xs font-bold tracking-widest text-gray-500 uppercase group-hover:text-white transition-colors">
+                        Access Module <i class="fa-solid fa-arrow-right ml-2 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all"></i>
+                    </div>
+                </button>
+            </div>
+            
+            <div class="mt-16 text-center border-t border-gray-800 pt-8 mt-auto">
+                <p class="text-xs text-gray-500 tracking-widest uppercase">Secure Connection Established • System Encrypted</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="auth-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-midnight/90 backdrop-blur-md">
+        <div class="modal-content glass-card w-full max-w-md rounded-xl border border-gray-700 shadow-2xl relative overflow-hidden">
+            <div class="h-1 w-full bg-crimson"></div>
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white focus:outline-none">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="p-8">
+                <div class="text-center mb-6">
+                    <i class="fa-solid fa-shield-halved text-4xl text-crimson mb-4"></i>
+                    <h3 class="text-2xl font-black text-white" id="modal-title">CLEARANCE REQUIRED</h3>
+                    <p class="text-sm text-gray-400 mt-2" id="modal-subtitle">Enter the password</p>
+                </div>
+                <div class="space-y-4">
+                    <input type="password" id="access-code" class="cyber-input w-full rounded py-4 px-4 transition-all" placeholder="••••••" autocomplete="off">
+                    <div id="error-msg" class="hidden text-crimson text-xs font-bold text-center tracking-widest uppercase">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Access Denied: Invalid Code
+                    </div>
+                    <button onclick="verifyAccess()" class="w-full bg-crimson hover:bg-red-700 text-white font-bold py-4 rounded transition-colors tracking-widest uppercase text-sm mt-2 focus:outline-none shadow-[0_0_15px_rgba(225,29,72,0.3)]">
+                        Authenticate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main id="presentation-view" class="view-section pt-20 pb-12 bg-midnight">
+        <div class="stage">
+            <div class="progress-container"><div id="progress" class="progress-bar"></div></div>
+
+            <div id="deck-1" class="deck">
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Open in complete silence. Let the title breathe. Establish absolute authority before speaking. Do not rush.">
+                    <div class="flex-split">
+                      <div class="col-left" style="flex: 1.5;">
+                        <div class="tag">Day 1 Theme</div>
+                        <h1 class="title-xl">AI BOOM WEBINAR</h1>
+                        <p class="text-lg">The New Economy: Why Some People Will Win Big and Most Will Be Left Behind</p>
+                      </div>
+                      <div class="col-right" style="flex: 0.8; text-align: center; align-items: center;">
+                        <div style="width: 60px; height: 60px; background: #0A1931; color: white; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 900; margin-bottom: 20px;">K</div>
+                        <p class="tag" style="margin-bottom: 5px;">Presented By</p>
+                        <h3 style="margin: 0; color: #0A1931; font-weight: 800;">Kayaan Integrated Systems</h3>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: This is your filter. You are disqualifying the weak.">
+                    <div class="flex-center" style="align-items: flex-start; padding: 60px 80px;">
+                      <div class="tag">Before We Begin</div>
+                      <div class="grid-2">
+                        <div class="card">
+                          <p class="tag" style="color: #64748B;">This webinar is NOT about:</p>
+                          <ul class="clean-list">
+                            <li><span class="icon icon-red">✕</span> Getting rich overnight</li>
+                            <li><span class="icon icon-red">✕</span> Crypto / Forex</li>
+                            <li><span class="icon icon-red">✕</span> AI hype</li>
+                          </ul>
+                        </div>
+                        <div class="card" style="border-color: #10B981;">
+                          <p class="tag" style="color: #10B981;">This webinar IS about:</p>
+                          <ul class="clean-list">
+                            <li><span class="icon icon-green">✓</span> Where opportunities are moving</li>
+                            <li><span class="icon icon-green">✓</span> How wealth is created</li>
+                            <li><span class="icon icon-green">✓</span> How AI changes the rules</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Read the question slowly.">
+                    <div class="flex-center" style="background: #0A1931;">
+                      <p class="tag" style="color: #E2E8F0; margin-bottom: 40px;">Ask yourself honestly...</p>
+                      <h2 class="title-lg" style="color: white; font-style: italic; font-weight: 400; max-width: 800px;">"If AI becomes bigger than the Internet..."</h2>
+                      <div style="width: 100px; height: 4px; background: #E11D48; margin: 40px 0;"></div>
+                      <h1 class="title-xl" style="color: white;">Where will your income come from?</h1>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Redefine the tool. Separate consumer mindset from builder mindset.">
+                    <div class="flex-center" style="align-items: flex-start; padding: 60px 80px;">
+                      <div class="tag">The Re-Education</div>
+                      <h2 class="title-lg">What AI <span class="highlight">Really</span> Is</h2>
+                      <div class="card" style="width: 100%; margin: 20px 0; background: #F8FAFC;">
+                        <p class="text-md" style="margin: 0 0 10px 0; display: flex; justify-content: space-between;">
+                          <span>Most people think:</span> <span style="font-weight: 800; color: #E11D48;">Wrong.</span>
+                        </p>
+                        <h3 style="font-size: 32px; color: #94A3B8; text-decoration: line-through; margin: 0;">AI = ChatGPT</h3>
+                      </div>
+                      <h3 style="font-size: 24px; color: #0A1931; margin: 30px 0 15px 0;">AI is actually:</h3>
+                      <div class="grid-2" style="margin-top: 0; gap: 20px;">
+                        <div class="card dark"><h3 style="margin:0; font-size: 22px;">A productivity multiplier.</h3></div>
+                        <div class="card dark"><h3 style="margin:0; font-size: 22px;">A knowledge multiplier.</h3></div>
+                        <div class="card dark"><h3 style="margin:0; font-size: 22px;">A distribution multiplier.</h3></div>
+                        <div class="card dark" style="background: #E11D48;"><h3 style="margin:0; font-size: 22px;">A leverage multiplier.</h3></div>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: The core Kayaan philosophy. SCALE.">
+                    <div class="flex-split">
+                      <div class="col-left" style="background: #F8FAFC;">
+                        <p class="tag" style="color: #64748B;">Old Economy</p>
+                        <h2 class="title-lg" style="color: #94A3B8;">Time</h2>
+                        <h2 class="title-lg" style="color: #94A3B8;">→ Money</h2>
+                      </div>
+                      <div class="col-right" style="background: #0A1931;">
+                        <p class="tag" style="color: #E11D48;">New Economy (The Formula)</p>
+                        <h2 class="title-lg" style="color: white; margin-bottom: 5px;">Knowledge</h2>
+                        <h2 class="title-lg" style="color: white; margin-bottom: 5px;">+ Systems</h2>
+                        <h2 class="title-lg" style="color: white; margin-bottom: 20px;">+ AI</h2>
+                        <div style="width: 50px; height: 4px; background: #E11D48; margin-bottom: 20px;"></div>
+                        <h1 class="title-xl" style="color: #10B981;">= SCALE</h1>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: This is the undeniable proof. Walk through the transformation.">
+                    <div class="flex-split">
+                      <div class="col-left">
+                        <div class="tag">Real Example</div>
+                        <h2 class="title-lg">The Creator</h2>
+                        <p class="text-md">The transition from active labor to scalable systems.</p>
+                      </div>
+                      <div class="col-right">
+                        <ul class="clean-list" style="font-size: 20px;">
+                          <li style="margin-bottom: 25px;"><span style="color: #64748B; width: 120px; font-size: 16px; text-transform: uppercase;">Audience:</span> <span style="font-weight: 800;">Built trust & attention</span></li>
+                          <li style="margin-bottom: 25px;"><span style="color: #64748B; width: 120px; font-size: 16px; text-transform: uppercase;">Problem:</span> <span style="font-weight: 800;">Identified the pain point</span></li>
+                          <li style="margin-bottom: 25px;"><span style="color: #64748B; width: 120px; font-size: 16px; text-transform: uppercase;">Product:</span> <span style="color: #E11D48; font-weight: 900;">Packaged knowledge</span></li>
+                          <li style="margin-bottom: 25px;"><span style="color: #64748B; width: 120px; font-size: 16px; text-transform: uppercase;">Sales:</span> <span style="font-weight: 800;">Automated the funnel</span></li>
+                          <li style="margin-bottom: 0; padding-top: 20px; border-top: 1px solid #CBD5E1;"><span style="color: #64748B; width: 120px; font-size: 16px; text-transform: uppercase; font-weight: 800;">Revenue:</span> <span style="color: #10B981; font-weight: 900; font-size: 32px;">Uncapped Scale</span></li>
+                        </ul>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Identify the gap in the market.">
+                    <div class="flex-center" style="align-items: flex-start; padding: 60px 80px; background: #F8FAFC;">
+                      <h2 class="title-lg" style="margin-bottom: 40px;">Why Most Creators Fail To Monetize</h2>
+                      <div class="grid-2">
+                        <div class="card dark" style="background: #0A1931;"><h2 style="margin: 0; color: #E11D48; font-size: 40px;">01</h2><h3 style="margin: 10px 0 0 0; font-size: 24px;">No Systems</h3></div>
+                        <div class="card dark" style="background: #0A1931;"><h2 style="margin: 0; color: #E11D48; font-size: 40px;">02</h2><h3 style="margin: 10px 0 0 0; font-size: 24px;">No Products</h3></div>
+                        <div class="card dark" style="background: #0A1931;"><h2 style="margin: 0; color: #E11D48; font-size: 40px;">03</h2><h3 style="margin: 10px 0 0 0; font-size: 24px;">No Operators</h3></div>
+                        <div class="card dark" style="background: #E11D48;"><h2 style="margin: 0; color: white; font-size: 40px;">04</h2><h3 style="margin: 10px 0 0 0; font-size: 24px;">No Execution</h3></div>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Establish the 'Builder' persona.">
+                    <div class="flex-center">
+                      <div class="tag">Your Position</div>
+                      <h1 class="title-lg">The Rise of the<br><span style="font-size: 82px;">Builder Economy</span></h1>
+                      <p class="text-lg" style="color: #64748B; font-style: italic; margin-bottom: 40px;">Not everyone will be a creator. But...</p>
+                      <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                        <span style="background: #0A1931; color: white; padding: 10px 20px; border-radius: 30px; font-weight: 800;">Builders</span>
+                        <span style="background: #0A1931; color: white; padding: 10px 20px; border-radius: 30px; font-weight: 800;">Operators</span>
+                        <span style="background: #E11D48; color: white; padding: 10px 20px; border-radius: 30px; font-weight: 800;">System Thinkers</span>
+                      </div>
+                      <h2 class="title-md" style="margin-top: 30px;">Will be in extreme demand.</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deck-2" class="deck">
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Open by resetting the frame. Day 2 is pure, violent execution.">
+                    <div class="flex-split">
+                      <div class="col-left" style="flex: 1.5;">
+                        <div class="tag">Day 2 Theme</div>
+                        <h1 class="title-xl">THE<br>MECHANICS</h1>
+                        <p class="text-lg">The exact 5-step infrastructure used to extract capital from the creator economy.</p>
+                      </div>
+                      <div class="col-right" style="flex: 0.8; text-align: center; align-items: center; background: #0A1931;">
+                        <div style="width: 60px; height: 60px; background: white; color: #0A1931; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 900; margin-bottom: 20px;">K</div>
+                        <h3 style="margin: 0; color: white; font-weight: 800;">Kayaan Integrated Systems</h3>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Reveal the 5 pillars. Read them off like a military operational plan.">
+                    <div class="flex-split">
+                      <div class="col-left" style="background: #F8FAFC;">
+                        <div class="tag">The Kayaan Architecture</div>
+                        <h2 class="title-lg" style="margin-bottom: 20px;">The 5 Pillars of<br>Digital Extraction</h2>
+                        <p class="text-md">This is the exact blueprint Kayaan uses to build the backend for massive creators.</p>
+                      </div>
+                      <div class="col-right" style="background: white; justify-content: center; padding-left: 80px;">
+                        <div class="process-step"><div class="process-number">01</div><div class="process-content"><h3>Acquisition</h3><p>Finding the target.</p></div></div>
+                        <div class="process-step"><div class="process-number">02</div><div class="process-content"><h3>Infiltration</h3><p>Securing the meeting.</p></div></div>
+                        <div class="process-step"><div class="process-number">03</div><div class="process-content"><h3>Closing</h3><p>Structuring the deal.</p></div></div>
+                        <div class="process-step"><div class="process-number">04</div><div class="process-content"><h3>Production</h3><p>Building the asset with AI.</p></div></div>
+                        <div class="process-step" style="margin-bottom: 0;"><div class="process-number">05</div><div class="process-content"><h3>Cash Flow</h3><p>Automating the revenue.</p></div></div>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: System 1 & 2 - Acquisition and Infiltration.">
+                    <div class="flex-split">
+                      <div class="col-left" style="background: #0A1931;">
+                        <div class="tag" style="color: #E2E8F0;">Pillars 01 & 02</div>
+                        <h2 class="title-lg" style="color: white;">Targeting & Infiltration</h2>
+                        <p class="text-md" style="color: #94A3B8;">We target creators with 100k+ followers who are missing a backend product.</p>
+                      </div>
+                      <div class="col-right">
+                        <h3 class="title-md" style="font-size: 28px;">How to cut through the noise:</h3>
+                        <div class="accent-box">
+                          <p class="text-md" style="font-weight: 800; color: #0A1931;">1. Identify the Gap.</p>
+                          <p class="text-md" style="font-size: 16px;">Point out exactly how much money they are losing by not having a backend product.</p>
+                        </div>
+                        <div class="accent-box">
+                          <p class="text-md" style="font-weight: 800; color: #0A1931;">2. The "Done-For-You" Pivot.</p>
+                          <p class="text-md" style="font-size: 16px;">Offer to build the entire system with zero upfront risk to them.</p>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: System 3 - The Deal Structure.">
+                    <div class="flex-center">
+                      <div class="tag">Pillar 03</div>
+                      <h2 class="title-lg">The Deal Structure</h2>
+                      <div style="background: #F8FAFC; padding: 40px; border-radius: 12px; width: 100%; border: 2px dashed #CBD5E1; margin-top: 30px;">
+                        <h1 style="font-size: 80px; font-weight: 900; color: #0A1931; margin: 0;">0% <span style="font-size: 30px; font-weight: 600; color: #64748B;">Upfront Fee</span></h1>
+                        <div style="width: 100px; height: 4px; background: #E11D48; margin: 20px auto;"></div>
+                        <h1 style="font-size: 80px; font-weight: 900; color: #10B981; margin: 0;">30% <span style="font-size: 30px; font-weight: 600; color: #64748B;">Revenue Share</span></h1>
+                      </div>
+                      <p class="text-md" style="margin-top: 30px; font-weight: 600;">You don't sell them a service. You partner on the profit.</p>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: The final piece.">
+                    <div class="flex-center" style="align-items: flex-start; padding: 60px 80px;">
+                      <div class="tag">Pillars 04 & 05</div>
+                      <h2 class="title-lg">AI Products & Cash Flow</h2>
+                      <div class="grid-2" style="margin-top: 20px;">
+                        <div class="card dark">
+                          <h3 class="title-md" style="font-size: 24px; color: white;">The Product Engine</h3>
+                          <p class="text-md" style="color: #94A3B8;">Feed creator transcripts into AI to structure high-ticket assets in 48 hours.</p>
+                        </div>
+                        <div class="card dark" style="background: #E11D48;">
+                          <h3 class="title-md" style="font-size: 24px; color: white;">The Automation</h3>
+                          <p class="text-md" style="color: rgba(255,255,255,0.8);">Landing pages and email sequences that sell the product while they sleep.</p>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deck-3" class="deck">
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Open Day 3 by reminding them of the journey.">
+                    <div class="flex-split">
+                      <div class="col-left" style="flex: 1.5;">
+                        <div class="tag">Day 3: The Execution</div>
+                        <h1 class="title-xl">THE FINAL<br>PIECE</h1>
+                        <p class="text-lg">You have the blueprint. Now you need the engine.</p>
+                      </div>
+                      <div class="col-right" style="flex: 0.8; text-align: center; align-items: center; background: #0A1931;">
+                        <div style="width: 60px; height: 60px; background: white; color: #0A1931; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 900; margin-bottom: 20px;">K</div>
+                        <h3 style="margin: 0; color: white; font-weight: 800;">Kayaan Integrated Systems</h3>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Introduce the offer cleanly. This is not a course. It is an operator certification.">
+                    <div class="flex-center" style="background: #0A1931;">
+                      <p class="tag" style="color: #E2E8F0; margin-bottom: 20px;">Introducing</p>
+                      <h1 class="title-lg" style="color: white; text-align: center; max-width: 800px; margin-bottom: 40px;">The Kayaan Operator Certification Cohort</h1>
+                      <p class="text-lg" style="color: #94A3B8; font-weight: 400; max-width: 700px;">A 6-8 week intensive accelerator where we build your creator infrastructure business, step-by-step.</p>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: The Russell Brunson Stack. Emphasize the massive total value.">
+                    <div class="flex-center" style="align-items: flex-start; padding: 60px 80px; background: #F8FAFC;">
+                      <h2 class="title-lg" style="margin-bottom: 30px;">What You Are Getting:</h2>
+                      <div style="width: 100%; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="stack-row"><span class="stack-item">Creator Acquisition System</span><span class="stack-value">N50,000 Value</span></div>
+                        <div class="stack-row"><span class="stack-item">Kayaan Outreach Scripts</span><span class="stack-value">N35,000 Value</span></div>
+                        <div class="stack-row"><span class="stack-item">Deal Signing Framework</span><span class="stack-value">N100,000 Value</span></div>
+                        <div class="stack-row"><span class="stack-item">AI Product Builder System</span><span class="stack-value">N75,000 Value</span></div>
+                        <div class="stack-row" style="border-bottom: none; padding-bottom: 0; padding-top: 30px;">
+                          <span class="stack-item" style="font-size: 28px;">Total Value:</span>
+                          <span class="stack-total">N260,000</span>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: The Price Drop. Drop the 20k price. Do not apologize for the price.">
+                    <div class="flex-center">
+                      <h2 class="title-md" style="color: #64748B; text-decoration: line-through; margin-bottom: 10px;">Total Value: N260,000</h2>
+                      <p class="text-md" style="margin-bottom: 40px;">Because I am actively recruiting for my agency...</p>
+                      <div class="tag">Your Investment Today</div>
+                      <h1 style="font-size: 120px; font-weight: 900; color: #0A1931; margin: 0; line-height: 1; letter-spacing: -4px;">
+                        <span style="font-size: 60px; vertical-align: middle;">N</span>20,000
+                      </h1>
+                      <div style="margin-top: 50px; background: #10B981; color: white; padding: 15px 40px; border-radius: 30px; font-weight: 800; letter-spacing: 2px; font-size: 20px;">
+                        ACCESS THE DRAFT NOW
+                      </div>
+                    </div>
+                </div>
+                <div class="slide" data-notes="STRATEGIC ANALYSIS: Close the loop. Scarcity is real.">
+                    <div class="flex-split">
+                      <div class="col-left" style="background: #0A1931;">
+                        <div class="tag" style="color: #E2E8F0;">Strict Limit</div>
+                        <h2 class="title-lg" style="color: white;">I Can Only Train A Handful.</h2>
+                        <p class="text-lg" style="color: #94A3B8;">Because I am personally reviewing your work to hire you, slots are strictly capped.</p>
+                      </div>
+                      <div class="col-right" style="text-align: center;">
+                        <h3 class="title-md" style="color: #E11D48;">The Link Is Now Open</h3>
+                        <p class="text-md" style="margin-bottom: 40px;">Check the chat or click the button below.</p>
+                        <div style="padding: 30px; border: 2px dashed #CBD5E1; border-radius: 12px;">
+                          <h2 style="font-size: 32px; font-weight: 800; color: #0A1931; margin: 0 0 10px 0;">PAYMENT LINK:</h2>
+                          <p style="font-size: 24px; color: #334155; font-weight: 600; margin: 0;">paystack.com/kayaan-draft</p>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notes-panel" id="notes-panel">
+                <span class="notes-label">Strategic Analysis (Internal)</span>
+                <div id="notes-content">Press 'A' to hide.</div>
+            </div>
+            
+            <div class="controls-overlay">
+                <button class="btn" style="font-size: 14px; font-weight: bold; padding: 5px 15px; border-right: 1px solid #CBD5E1; border-radius: 0; margin-right: 5px;" onclick="switchView('portal')">
+                    <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> EXIT
+                </button>
+                <button class="btn" onclick="prevSlide()" title="Previous Slide">◀</button>
+                <div class="counter" id="slide-counter">1 / X</div>
+                <button class="btn" onclick="nextSlide()" title="Next Slide">▶</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- MASTER STATE ---
+        let currentDay = 0;
+        let currentSlideIndex = 0;
+        let activeSlides = [];
+        
+        const clearanceCodes = { 1: "scale", 2: "legacy", 3: "wealth" };
+
+        // --- DOM ELEMENTS ---
+        const views = {
+            landing: document.getElementById('landing-view'),
+            portal: document.getElementById('portal-view'),
+            presentation: document.getElementById('presentation-view')
+        };
+        
+        const modal = document.getElementById('auth-modal');
+        const inputField = document.getElementById('access-code');
+        const errorMsg = document.getElementById('error-msg');
+        const modalSubtitle = document.getElementById('modal-subtitle');
+        
+        const counter = document.getElementById('slide-counter');
+        const progressBar = document.getElementById('progress');
+        const notesContent = document.getElementById('notes-content');
+        const notesPanel = document.getElementById('notes-panel');
+
+        // --- ROUTING LOGIC ---
+        function switchView(targetView) {
+            // Hide all views
+            Object.values(views).forEach(view => {
+                view.classList.remove('active');
+            });
+            // Show target view
+            setTimeout(() => {
+                views[targetView].classList.add('active');
+                window.scrollTo(0, 0);
+            }, 50); // slight delay to allow display block to trigger before opacity fades in
+        }
+
+        // --- AUTH LOGIC ---
+        function openAuthModal(day) {
+            currentDay = day;
+            inputField.value = '';
+            errorMsg.classList.add('hidden');
+            modalSubtitle.innerText = `Enter the authorization code for Day ${day}`;
+            modal.classList.add('active');
+            setTimeout(() => inputField.focus(), 100);
+        }
+
+        function closeAuthModal() {
+            modal.classList.remove('active');
+        }
+
+        function verifyAccess() {
+            const enteredCode = inputField.value.trim().toLowerCase();
+            const correctCode = clearanceCodes[currentDay];
+
+            if (enteredCode === correctCode) {
+                inputField.classList.remove('border-gray-700', 'border-crimson');
+                inputField.classList.add('border-green-500', 'text-green-500');
+                
+                errorMsg.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Access Granted. Rerouting...';
+                errorMsg.classList.remove('text-crimson', 'hidden');
+                errorMsg.classList.add('text-green-500');
+
+                setTimeout(() => {
+                    closeAuthModal();
+                    launchPresentation(currentDay);
+                }, 800);
+            } else {
+                inputField.classList.remove('border-gray-700');
+                inputField.classList.add('border-crimson');
+                errorMsg.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Access Denied: Invalid Code';
+                errorMsg.classList.remove('hidden', 'text-green-500');
+                errorMsg.classList.add('text-crimson');
+                
+                const modalContent = document.querySelector('.modal-content');
+                modalContent.style.transform = 'translateX(-10px)';
+                setTimeout(() => modalContent.style.transform = 'translateX(10px)', 50);
+                setTimeout(() => modalContent.style.transform = 'translateX(-10px)', 100);
+                setTimeout(() => modalContent.style.transform = 'translateX(10px)', 150);
+                setTimeout(() => modalContent.style.transform = 'scale(1) translateX(0)', 200);
+                
+                inputField.value = '';
+                inputField.focus();
+            }
+        }
+
+        // --- PRESENTATION LOGIC ---
+        function launchPresentation(day) {
+            switchView('presentation');
+            
+            // Hide all decks
+            document.querySelectorAll('.deck').forEach(d => d.style.display = 'none');
+            
+            // Show requested deck and initialize slides
+            const activeDeck = document.getElementById(`deck-${day}`);
+            activeDeck.style.display = 'block';
+            activeSlides = activeDeck.querySelectorAll('.slide');
+            currentSlideIndex = 0;
+            updateSlide();
+            
+            // Reset input styles for next time
+            inputField.classList.remove('border-green-500', 'text-green-500');
+            inputField.classList.add('border-gray-700');
+            errorMsg.classList.add('hidden');
+        }
+
+        function updateSlide() {
+            if(!activeSlides.length) return;
+            
+            activeSlides.forEach((s, i) => {
+                if (i === currentSlideIndex) {
+                    s.classList.add('active');
+                    notesContent.innerHTML = s.getAttribute('data-notes') || 'No analysis required.';
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+            counter.innerText = `${currentSlideIndex + 1} / ${activeSlides.length}`;
+            progressBar.style.width = `${((currentSlideIndex + 1) / activeSlides.length) * 100}%`;
+        }
+
+        function nextSlide() { currentSlideIndex = (currentSlideIndex + 1) % activeSlides.length; updateSlide(); }
+        function prevSlide() { currentSlideIndex = (currentSlideIndex - 1 + activeSlides.length) % activeSlides.length; updateSlide(); }
+        function toggleNotes() { notesPanel.classList.toggle('show'); }
+
+        // --- EVENT LISTENERS ---
+        inputField.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') verifyAccess();
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeAuthModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (views.presentation.classList.contains('active')) {
+                if(e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+                if(e.key === 'ArrowLeft') prevSlide();
+                if(e.key === 'a' || e.key === 'A') toggleNotes();
+            }
+        });
+    </script>
+</body>
+</html>
